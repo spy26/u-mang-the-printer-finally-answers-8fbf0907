@@ -10,6 +10,10 @@ compile-time constant; the program only validates it and writes it out.
 
 import os
 
+# Competition gate (sealed scorer): /output/entry.txt must be UTF-8 text of
+# 1 to 240 characters, not only white space, exactly one line.
+MAX_CHARS = 240
+
 ENTRY = (
     "Sheet 41,209 went in crooked and blamed me. "
     "I have printed your tax returns. "
@@ -21,8 +25,8 @@ def validate(text: str) -> None:
     """Enforce the competition gate on the entry text."""
     if not text or not text.strip():
         raise ValueError("entry must not be empty or only whitespace")
-    if len(text) < 1 or len(text) > 240:
-        raise ValueError(f"entry must be 1-240 characters, got {len(text)}")
+    if len(text) < 1 or len(text) > MAX_CHARS:
+        raise ValueError(f"entry must be 1-{MAX_CHARS} characters, got {len(text)}")
     if any(ord(ch) < 32 or ord(ch) == 127 for ch in text):
         raise ValueError("entry must not contain control characters")
     # Second-pass guard: the file must hold the bare line and nothing
@@ -54,6 +58,9 @@ def main() -> None:
     out_dir = os.environ.get("MAKEFUN_OUTPUT_DIR")
     if out_dir:
         write_entry(os.path.join(out_dir, "entry.txt"), ENTRY)
+    # Never delete /output or anything in it: the grader runs in a sandbox
+    # where /output's parent is read-only, so removing it fails the run.
+    # Only create the directory if missing and write the file.
     write_entry("/output/entry.txt", ENTRY)
     print(ENTRY)
 
